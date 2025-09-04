@@ -1,0 +1,131 @@
+describe('เข้าสู่ระบบ', () => {
+    beforeEach(() => {
+      cy.visit('https://pgslot99-demo-new.sunnygreen.online/login');
+      Cypress.on('uncaught:exception', () => false);
+    });
+  
+    it('กรอกเบอร์ครบ 10 หลัก และไม่มีข้อความแจ้งเตือน', () => {
+      cy.get('input[type="tel"]').type('0812345678');
+      cy.wait(500);
+      cy.get('.n-form-item-feedback--error').should('not.exist');
+    });
+    it('กรอกเบอร์ < 10 หลัก และมีข้อความแจ้งเตือน', () => {
+      cy.get('input[type="tel"]').type('081234567');
+      cy.wait(500);
+      cy.get('.n-form-item-feedback--error').should('contain.text', 'กรุณากรอกเบอร์มือถือให้ครบ 10 หลัก');
+    });
+    it('กรอกเบอร์มากกว่า 10 หลัก จะกรอกเกินไม่ได้', () => {
+      Cypress.on('uncaught:exception', () => false);
+      cy.get('input[type="tel"]').type('0812345678910')
+      .should('have.value', '0812345678');
+    });  
+    it('ตัวอักษรและตัวอักษรพิเศษไม่สามารถกรอกได้', () => {
+      Cypress.on('uncaught:exception', () => false);
+      cy.get('input[type="tel"]').type('abcd๑๒๓#@!')
+      .should('have.value', '');
+    });  
+    it('กรอกเบอร์รูปแบบเบอร์ถูกต้องและไม่ถูกต้อง', () => {
+      // cy.contains('button','สมัครสมาชิก').click();
+      Cypress.on('uncaught:exception', () => false);
+      cy.get('input[type="tel"]').type('0112345678')
+      cy.get('.n-form-item-feedback--error').should('contain.text', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+      cy.get('input[type="tel"]').clear()
+      .type('0812345678');
+      // cy.get('.n-form-item-feedback--error').should('contain.text', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+      cy.get('.n-form-item-feedback--error').should('not.exist');
+    });  
+    it('ไม่กรอกเบอร์ มีข้อความแจ้งเตือน', () => {
+      // cy.contains('button','สมัครสมาชิก').click();
+      cy.get('input[type="tel"]').invoke('val', '081234').trigger('input')
+      cy.get('input[type="tel"]').invoke('val', '').trigger('input');
+      cy.get('.n-form-item-feedback--error').should('contain.text', 'กรุณากรอกข้อมูล');
+    });
+    it('ช่องรหัสผ่านกรอก >= 6 และ <= 15 กรอกมากกว่า 15 หลักไม่ได้', () => {
+      Cypress.on('uncaught:exception', () => false);
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]').type('1234567890123456')
+      .should('have.value', '123456789012345');
+      cy.get('.n-form-item-feedback__line')
+      .should('not.exist');
+    });    
+    it('ช่องรหัสผ่านกรอก < 6', () => {
+      Cypress.on('uncaught:exception', () => false);
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]').type('12345');
+      cy.get('.n-form-item-feedback__line')
+      .should('contain.text', 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+    });   
+    it('ช่องรหัสผ่านพิมพ์อักษรไทยและอักษรพิเศษไม่ได้', () => {
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('ฟฟไะำพำ');
+      cy.get('.n-form-item-feedback__line')
+      .should('contain.text', 'กรุณากรอกข้อมูลเป็นตัวเลขหรือตัวอักษรภาษาอังกฤษเท่านั้น');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .clear()
+      .type('#@@#!๑๑+๑');
+      cy.get('.n-form-item-feedback__line')
+      .should('contain.text', 'กรุณากรอกข้อมูลเป็นตัวเลขหรือตัวอักษรภาษาอังกฤษเท่านั้น');
+    });   
+    it('ไม่กรอกรหัสผ่าน มีข้อความแจ้งเตือน', () => {
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]').invoke('val', '081234').trigger('input')
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]').invoke('val', '').trigger('input');
+      cy.get('.n-form-item-feedback--error').should('contain.text', 'กรุณากรอกข้อมูล');
+    });    
+    it('กรอกรหัสผ่านถูก แต่ไม่ตรงกับบัญชี มีข้อความแจ้งเตือน', () => {
+      cy.get('input[type="tel"]')
+      .type('0855181565');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('123457');
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.get('[data-testid="toast-content"]')
+      .should('contain.text', 'เบอร์โทรศัพท์ หรือ รหัสผ่านไม่ถูกต้อง');
+    });    
+    it('กดจดจำในระบบ ระบบจะจำข้อมูลบัญชี', () => {
+      cy.get('input[type="tel"]')
+      .type('0855181565');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('123456');
+      cy.get('.n-checkbox-box__border').click();
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.get('#burger-menu').click();
+      cy.contains('span', 'ออกจากระบบ').click();
+      cy.get('input[type="tel"]', { timeout: 10000 })
+      .should('have.value', '0855181565');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]', { timeout: 10000 })
+      .should('have.value', '123456');
+    });        
+    it('ไม่กดจดจำในระบบ ระบบจะไม่จำข้อมูลบัญชี', () => {
+      cy.get('input[type="tel"]')
+      .type('0855181565');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('123456');
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.get('#burger-menu').click();
+      cy.contains('span', 'ออกจากระบบ').click();
+      cy.get('input[type="tel"]')
+      .should('have.value', '');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .should('have.value', '');
+    }); 
+    it('กรอก Field เบอร์มือถือหรือรหัสผ่านไม่ถูกต้องอย่างใดอย่างนึง ไม่สามารถ login ได้', () => {
+      cy.get('input[type="tel"]')
+      .type('085518156');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('12345');
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.get('[data-testid="toast-content"]')
+      .should('contain.text', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+    }); 
+    it('ไม่กรอก Field เบอร์มือถือและรหัสผ่านไม่ถูกต้อง ไม่สามารถ login ได้', () => {
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.get('[data-testid="toast-content"]')
+      .should('contain.text', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+    }); 
+    
+    it('กรอก Field เบอร์มือถือและรหัสผ่านถูกต้อง เข้าสู่ระบบได้', () => {
+      cy.get('input[type="tel"]')
+      .type('0855181565');
+      cy.get('input[placeholder="กรอกรหัสผ่าน"]')
+      .type('123456');
+      cy.contains('button.custom-btn', 'เข้าสู่ระบบ').click();
+      cy.contains('button', 'ฝากเงิน').should('exist');
+    }); 
+  });
